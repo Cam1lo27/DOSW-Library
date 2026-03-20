@@ -1,5 +1,7 @@
 package edu.eci.dosw.tdd.core.model;
+import lombok.Data;
 
+@Data
 public class Book {
     private String id;
     private String title;
@@ -13,9 +15,5 @@ public class Book {
         this.available = true;
     }
 
-    public String getId() { return id; }
-    public String getTitle() { return title; }
-    public String getAuthor() { return author; }
-    public boolean isAvailable() { return available; }
-    public void setAvailable(boolean available) { this.available = available; }
+
 }

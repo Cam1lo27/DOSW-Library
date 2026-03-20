@@ -27,4 +27,8 @@ public class UserService {
                 .findFirst()
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
+
+    public void deleteUser(String id) {
+        users.removeIf(u -> u.getId().equals(id));
+    }
 }

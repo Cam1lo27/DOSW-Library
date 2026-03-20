@@ -1,4 +1,4 @@
-package edu.eci.dosw.DOSW_Library;
+package edu.eci.dosw.tdd;
 
 import edu.eci.dosw.tdd.core.util.ValidationUtil;
 import org.junit.jupiter.api.Test;

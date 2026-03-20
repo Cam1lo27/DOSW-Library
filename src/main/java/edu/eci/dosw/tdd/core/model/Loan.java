@@ -1,7 +1,9 @@
 package edu.eci.dosw.tdd.core.model;
 
 import java.time.LocalDate;
+import lombok.Data;
 
+@Data
 public class Loan {
     private Book book;
     private User user;
@@ -15,12 +17,6 @@ public class Loan {
         this.loanDate = LocalDate.now();
         this.status = LoanStatus.ACTIVE;
     }
-
-    public Book getBook() { return book; }
-    public User getUser() { return user; }
-    public LocalDate getLoanDate() { return loanDate; }
-    public LocalDate getReturnDate() { return returnDate; }
-    public LoanStatus getStatus() { return status; }
 
     public void returnBook() {
         this.status = LoanStatus.RETURNED;

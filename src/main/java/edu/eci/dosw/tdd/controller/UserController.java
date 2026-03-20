@@ -2,6 +2,7 @@ package edu.eci.dosw.tdd.controller;
 
 import edu.eci.dosw.tdd.controller.dto.UserDTO;
 import edu.eci.dosw.tdd.controller.mapper.UserMapper;
+import edu.eci.dosw.tdd.core.model.User;
 import edu.eci.dosw.tdd.core.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +38,28 @@ public class UserController {
     @GetMapping("/{id}")
     public UserDTO getUserById(@PathVariable String id) {
         return userMapper.toDTO(userService.getUserById(id));
+    }
+
+    @PutMapping("/{id}")
+    public UserDTO updateUser(@PathVariable String id, @RequestBody UserDTO dto) {
+        return userMapper.toDTO(
+                userService.registerUser(userMapper.toModel(dto))
+        );
+    }
+
+    @PatchMapping("/{id}")
+    public UserDTO patchUser(@PathVariable String id, @RequestBody UserDTO dto) {
+        User user = userService.getUserById(id);
+
+        if (dto.getName() != null) {
+            user.setName(dto.getName());
+        }
+
+        return userMapper.toDTO(user);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable String id) {
+        userService.deleteUser(id);
     }
 }
