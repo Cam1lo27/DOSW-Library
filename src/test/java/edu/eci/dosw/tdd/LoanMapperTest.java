@@ -15,7 +15,7 @@ class LoanMapperTest {
 
     @Test
     void toDTO_shouldMapCorrectly() {
-        Book book = new Book("b1", "Clean Code", "Robert Martin");
+        Book book = new Book("b1", "Clean Code", "Robert Martin", 2);
         User user = new User("u1", "Juan");
         Loan loan = new Loan(book, user);
 

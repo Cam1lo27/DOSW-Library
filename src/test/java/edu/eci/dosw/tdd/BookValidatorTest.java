@@ -12,19 +12,40 @@ class BookValidatorTest {
 
     @Test
     void validate_shouldPass_whenBookIsValid() {
-        Book book = new Book("1", "Clean Code", "Robert Martin");
+        Book book = new Book("1", "Clean Code", "Robert Martin", 5);
+
         assertDoesNotThrow(() -> validator.validate(book));
     }
 
     @Test
     void validate_shouldThrow_whenTitleIsBlank() {
-        Book book = new Book("1", "", "Robert Martin");
-        assertThrows(IllegalArgumentException.class, () -> validator.validate(book));
+        Book book = new Book("1", "", "Robert Martin", 5);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(book));
     }
 
     @Test
     void validate_shouldThrow_whenAuthorIsBlank() {
-        Book book = new Book("1", "Clean Code", "");
-        assertThrows(IllegalArgumentException.class, () -> validator.validate(book));
+        Book book = new Book("1", "Clean Code", "", 5);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(book));
+    }
+
+    @Test
+    void validate_shouldThrow_whenIdIsNull() {
+        Book book = new Book(null, "Clean Code", "Robert Martin", 5);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(book));
+    }
+
+    @Test
+    void validate_shouldThrow_whenCopiesNegative() {
+        Book book = new Book("1", "Clean Code", "Robert Martin", -1);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.validate(book));
     }
 }

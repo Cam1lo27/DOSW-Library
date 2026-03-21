@@ -14,7 +14,11 @@ class LoanValidatorTest {
 
     @Test
     void validate_shouldPass_whenLoanIsValid() {
-        Loan loan = new Loan(new Book("b1", "Clean Code", "Robert Martin"), new User("u1", "Juan"));
+        Book book = new Book("b1", "Clean Code", "Martin", 2);
+        User user = new User("u1", "Juan");
+
+        Loan loan = new Loan(book, user);
+
         assertDoesNotThrow(() -> validator.validate(loan));
     }
 }

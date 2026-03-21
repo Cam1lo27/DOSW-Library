@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class Loan {
 
+
     private Book book;
     private User user;
     private LocalDate loanDate;

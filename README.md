@@ -158,3 +158,7 @@ pruebas automatizadas, documentación de API y control de calidad, aplicadas en 
 
 ### Schemas
 ![swagger5.png](Images/swagger5.png)
+
+### Video de pruebas funcionales con cada enpoint simulando los flujos de usuarios, libros y prestamos
+
+[videoPruebaSwagger.mp4](Video/videoPruebaSwagger.mp4)

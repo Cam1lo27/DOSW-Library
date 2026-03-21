@@ -8,16 +8,17 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
-
     private String id;
     private String title;
     private String author;
+    private int copies;
     private boolean available;
 
-    public Book(String id, String title, String author) {
+    public Book(String id, String title, String author, int copies) {
         this.id = id;
         this.title = title;
         this.author = author;
-        this.available = true;
+        this.copies = copies;
+        this.available = copies > 0;
     }
 }

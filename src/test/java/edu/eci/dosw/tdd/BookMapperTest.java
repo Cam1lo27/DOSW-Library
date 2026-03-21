@@ -27,12 +27,23 @@ class BookMapperTest {
 
     @Test
     void toDTO_shouldMapCorrectly() {
-        Book book = new Book("1", "Clean Code", "Robert Martin");
+        Book book = new Book("1", "Clean Code", "Robert Martin", 5);
 
         BookDTO dto = mapper.toDTO(book);
 
         assertEquals("1", dto.getId());
         assertEquals("Clean Code", dto.getTitle());
         assertEquals("Robert Martin", dto.getAuthor());
+    }
+
+    @Test
+    void toModel_shouldHandleNullValues() {
+        BookDTO dto = new BookDTO();
+
+        Book book = mapper.toModel(dto);
+
+        assertNull(book.getId());
+        assertNull(book.getTitle());
+        assertNull(book.getAuthor());
     }
 }

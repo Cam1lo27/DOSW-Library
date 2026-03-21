@@ -12,22 +12,25 @@ import java.util.Map;
 @Service
 public class BookService {
 
-    private final Map<Book, Integer> bookCopies = new HashMap<>();
+    private final Map<String, Book> books = new HashMap<>();
+    private final Map<String, Integer> bookCopies = new HashMap<>();
 
     public Book addBook(Book book, int copies) {
-        bookCopies.put(book, copies);
+        book.setCopies(copies);
+        book.setAvailable(copies > 0);
+        books.put(book.getId(), book);
+        bookCopies.put(book.getId(), copies);
         return book;
     }
 
     public List<Book> getAllBooks() {
-        return new ArrayList<>(bookCopies.keySet());
+        return new ArrayList<>(books.values());
     }
 
     public Book getBookById(String id) {
-        return bookCopies.keySet().stream()
-                .filter(b -> b.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new BookNotAvailableException(id));
+        Book book = books.get(id);
+        if (book == null) throw new BookNotAvailableException(id);
+        return book;
     }
 
     public Book updateAvailability(String id, boolean available) {
@@ -38,15 +41,19 @@ public class BookService {
 
     public void decrementCopies(String id) {
         Book book = getBookById(id);
-        int copies = bookCopies.get(book);
+        int copies = bookCopies.get(id);
         if (copies <= 0) throw new BookNotAvailableException(id);
-        bookCopies.put(book, copies - 1);
-        if (copies - 1 == 0) book.setAvailable(false);
+        int newCopies = copies - 1;
+        bookCopies.put(id, newCopies);
+        book.setCopies(newCopies);
+        book.setAvailable(newCopies > 0);
     }
 
     public void incrementCopies(String id) {
         Book book = getBookById(id);
-        bookCopies.put(book, bookCopies.get(book) + 1);
+        int newCopies = bookCopies.get(id) + 1;
+        bookCopies.put(id, newCopies);
+        book.setCopies(newCopies);
         book.setAvailable(true);
     }
 }
