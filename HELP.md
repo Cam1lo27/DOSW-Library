@@ -1,7 +1,7 @@
 # Read Me First
 The following was discovered as part of building this project:
 
-* The original package name 'edu.eci.dosw.DOSW-Library' is invalid and this project uses 'edu.eci.dosw.DOSW_Library' instead.
+* The original package name 'edu.eci.dosw.DOSW-Library' is invalid and this project uses 'edu.eci.dosw.tdd' instead.
 
 # Getting Started
 
