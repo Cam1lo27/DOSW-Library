@@ -3,7 +3,9 @@ package edu.eci.dosw.tdd.controller;
 import edu.eci.dosw.tdd.controller.dto.BookDTO;
 import edu.eci.dosw.tdd.controller.mapper.BookMapper;
 import edu.eci.dosw.tdd.core.service.BookService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,11 +25,13 @@ public class BookController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BookDTO addBook(@RequestBody BookDTO dto) {
+    @PreAuthorize("hasRole('LIBRARIAN')")
+    public BookDTO addBook( @Valid @RequestBody BookDTO dto) {
         return bookMapper.toDTO(bookService.addBook(bookMapper.toModel(dto)));
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('USER') or hasRole('LIBRARIAN')")
     public List<BookDTO> getAllBooks() {
         return bookService.getAllBooks().stream()
                 .map(bookMapper::toDTO)
@@ -35,6 +39,7 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('USER') or hasRole('LIBRARIAN')")
     public BookDTO getBookById(@PathVariable String id) {
         return bookMapper.toDTO(bookService.getBookById(id));
     }

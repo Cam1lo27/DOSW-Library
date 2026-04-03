@@ -5,6 +5,7 @@ import edu.eci.dosw.tdd.core.model.User;
 import edu.eci.dosw.tdd.persistence.dao.UserEntity;
 import edu.eci.dosw.tdd.persistence.mapper.UserPersistenceMapper;
 import edu.eci.dosw.tdd.persistence.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,13 +16,18 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserPersistenceMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserPersistenceMapper userMapper) {
+    public UserService(UserRepository userRepository,
+                       UserPersistenceMapper userMapper,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User registerUser(User user) {
+        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         return userMapper.toModel(userRepository.save(userMapper.toEntity(user)));
     }
 

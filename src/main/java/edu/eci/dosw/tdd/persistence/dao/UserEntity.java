@@ -23,5 +23,5 @@ public class UserEntity {
     private String name;
 
     @Column(nullable = false)
-    private String role; // "USER" o "LIBRARIAN"
+    private String role;
 }
