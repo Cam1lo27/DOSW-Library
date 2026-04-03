@@ -105,6 +105,10 @@ pruebas automatizadas, documentación de API y control de calidad, aplicadas en 
 ### Diagrama de Componentes
 ![diagrama-de-componentes-general.png](Images/diagrama-de-componentes-general.png)
 
+### Diagrama ER PostgreSQL
+
+![DiagramaER.png](Images/DiagramaER.png)
+
 ## Cobertura de pruebas (JaCoCo)
 
 ![cobertura.png](Images/cobertura.png)

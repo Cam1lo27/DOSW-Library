@@ -24,7 +24,7 @@ public class BookController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BookDTO addBook(@RequestBody BookDTO dto) {
-        return bookMapper.toDTO(bookService.addBook(bookMapper.toModel(dto), dto.getCopies()));
+        return bookMapper.toDTO(bookService.addBook(bookMapper.toModel(dto)));
     }
 
     @GetMapping
@@ -37,10 +37,5 @@ public class BookController {
     @GetMapping("/{id}")
     public BookDTO getBookById(@PathVariable String id) {
         return bookMapper.toDTO(bookService.getBookById(id));
-    }
-
-    @PatchMapping("/{id}/availability")
-    public BookDTO updateAvailability(@PathVariable String id, @RequestParam boolean available) {
-        return bookMapper.toDTO(bookService.updateAvailability(id, available));
     }
 }

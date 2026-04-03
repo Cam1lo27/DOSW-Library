@@ -2,58 +2,62 @@ package edu.eci.dosw.tdd.core.service;
 
 import edu.eci.dosw.tdd.core.exception.BookNotAvailableException;
 import edu.eci.dosw.tdd.core.model.Book;
+import edu.eci.dosw.tdd.persistence.dao.BookEntity;
+import edu.eci.dosw.tdd.persistence.mapper.BookPersistenceMapper;
+import edu.eci.dosw.tdd.persistence.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class BookService {
 
-    private final Map<String, Book> books = new HashMap<>();
-    private final Map<String, Integer> bookCopies = new HashMap<>();
+    private final BookRepository bookRepository;
+    private final BookPersistenceMapper bookMapper;
 
-    public Book addBook(Book book, int copies) {
-        book.setCopies(copies);
-        book.setAvailable(copies > 0);
-        books.put(book.getId(), book);
-        bookCopies.put(book.getId(), copies);
-        return book;
+    public BookService(BookRepository bookRepository, BookPersistenceMapper bookMapper) {
+        this.bookRepository = bookRepository;
+        this.bookMapper = bookMapper;
+    }
+
+    public Book addBook(Book book) {
+        if (book.getTotalCopies() <= 0)
+            throw new IllegalArgumentException("El total de copias debe ser mayor a 0.");
+        book.setAvailableCopies(book.getTotalCopies());
+        return bookMapper.toModel(bookRepository.save(bookMapper.toEntity(book)));
     }
 
     public List<Book> getAllBooks() {
-        return new ArrayList<>(books.values());
+        return bookRepository.findAll().stream()
+                .map(bookMapper::toModel)
+                .collect(Collectors.toList());
     }
 
     public Book getBookById(String id) {
-        Book book = books.get(id);
-        if (book == null) throw new BookNotAvailableException(id);
-        return book;
+        return bookRepository.findById(id)
+                .map(bookMapper::toModel)
+                .orElseThrow(() -> new BookNotAvailableException(id));
     }
 
-    public Book updateAvailability(String id, boolean available) {
-        Book book = getBookById(id);
-        book.setAvailable(available);
-        return book;
+    public BookEntity getEntityById(String id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new BookNotAvailableException(id));
     }
 
     public void decrementCopies(String id) {
-        Book book = getBookById(id);
-        int copies = bookCopies.get(id);
-        if (copies <= 0) throw new BookNotAvailableException(id);
-        int newCopies = copies - 1;
-        bookCopies.put(id, newCopies);
-        book.setCopies(newCopies);
-        book.setAvailable(newCopies > 0);
+        BookEntity entity = getEntityById(id);
+        if (entity.getAvailableCopies() <= 0)
+            throw new BookNotAvailableException(id);
+        entity.setAvailableCopies(entity.getAvailableCopies() - 1);
+        bookRepository.save(entity);
     }
 
     public void incrementCopies(String id) {
-        Book book = getBookById(id);
-        int newCopies = bookCopies.get(id) + 1;
-        bookCopies.put(id, newCopies);
-        book.setCopies(newCopies);
-        book.setAvailable(true);
+        BookEntity entity = getEntityById(id);
+        if (entity.getAvailableCopies() >= entity.getTotalCopies())
+            throw new IllegalStateException("No se pueden superar las copias totales.");
+        entity.setAvailableCopies(entity.getAvailableCopies() + 1);
+        bookRepository.save(entity);
     }
 }

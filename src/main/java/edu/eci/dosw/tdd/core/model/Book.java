@@ -11,14 +11,10 @@ public class Book {
     private String id;
     private String title;
     private String author;
-    private int copies;
-    private boolean available;
+    private int totalCopies;
+    private int availableCopies;
 
-    public Book(String id, String title, String author, int copies) {
-        this.id = id;
-        this.title = title;
-        this.author = author;
-        this.copies = copies;
-        this.available = copies > 0;
+    public boolean isAvailable() {
+        return availableCopies > 0;
     }
 }

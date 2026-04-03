@@ -3,10 +3,12 @@ package edu.eci.dosw.tdd.core.service;
 import edu.eci.dosw.tdd.core.exception.BookNotAvailableException;
 import edu.eci.dosw.tdd.core.exception.LoanLimitExceededException;
 import edu.eci.dosw.tdd.core.model.Loan;
-import edu.eci.dosw.tdd.core.model.LoanStatus;
+import edu.eci.dosw.tdd.persistence.dao.LoanEntity;
+import edu.eci.dosw.tdd.persistence.mapper.LoanPersistenceMapper;
+import edu.eci.dosw.tdd.persistence.repository.LoanRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,51 +16,55 @@ import java.util.stream.Collectors;
 public class LoanService {
 
     private static final int MAX_LOANS = 3;
-    private final List<Loan> loans = new ArrayList<>();
+
+    private final LoanRepository loanRepository;
+    private final LoanPersistenceMapper loanMapper;
     private final BookService bookService;
     private final UserService userService;
 
-    public LoanService(BookService bookService, UserService userService) {
+    public LoanService(LoanRepository loanRepository, LoanPersistenceMapper loanMapper,
+                       BookService bookService, UserService userService) {
+        this.loanRepository = loanRepository;
+        this.loanMapper = loanMapper;
         this.bookService = bookService;
         this.userService = userService;
     }
 
     public Loan createLoan(String userId, String bookId) {
-        var user = userService.getUserById(userId);
         var book = bookService.getBookById(bookId);
 
         if (!book.isAvailable()) throw new BookNotAvailableException(bookId);
 
-        long activeLoans = loans.stream()
-                .filter(l -> l.getUser().getId().equals(userId))
-                .filter(l -> l.getStatus() == LoanStatus.ACTIVE)
-                .count();
-
+        long activeLoans = loanRepository.countByUserIdAndStatus(userId, "ACTIVE");
         if (activeLoans >= MAX_LOANS) throw new LoanLimitExceededException(userId);
 
         bookService.decrementCopies(bookId);
-        Loan loan = new Loan(book, user);
-        loans.add(loan);
-        return loan;
+
+        LoanEntity entity = new LoanEntity();
+        entity.setUser(userService.getEntityById(userId));
+        entity.setBook(bookService.getEntityById(bookId));
+        entity.setLoanDate(LocalDate.now());
+        entity.setStatus("ACTIVE");
+
+        return loanMapper.toModel(loanRepository.save(entity));
     }
 
     public Loan returnLoan(String userId, String bookId) {
-        Loan loan = loans.stream()
-                .filter(l -> l.getUser().getId().equals(userId))
-                .filter(l -> l.getBook().getId().equals(bookId))
-                .filter(l -> l.getStatus() == LoanStatus.ACTIVE)
-                .findFirst()
+        LoanEntity entity = loanRepository
+                .findByUserIdAndBookIdAndStatus(userId, bookId, "ACTIVE")
                 .orElseThrow(() -> new BookNotAvailableException(bookId));
 
-        loan.returnBook();
+        entity.setStatus("RETURNED");
+        entity.setReturnDate(LocalDate.now());
         bookService.incrementCopies(bookId);
-        return loan;
+
+        return loanMapper.toModel(loanRepository.save(entity));
     }
 
     public List<Loan> getLoansByUser(String userId) {
         userService.getUserById(userId);
-        return loans.stream()
-                .filter(l -> l.getUser().getId().equals(userId))
+        return loanRepository.findByUserId(userId).stream()
+                .map(loanMapper::toModel)
                 .collect(Collectors.toList());
     }
 }

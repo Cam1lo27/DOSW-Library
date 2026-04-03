@@ -51,11 +51,11 @@ public class UserController {
     public UserDTO patchUser(@PathVariable String id, @RequestBody UserDTO dto) {
         User user = userService.getUserById(id);
 
-        if (dto.getName() != null) {
-            user.setName(dto.getName());
-        }
+        if (dto.getName() != null) user.setName(dto.getName());
+        if (dto.getUsername() != null) user.setUsername(dto.getUsername());
+        if (dto.getRole() != null) user.setRole(dto.getRole());
 
-        return userMapper.toDTO(user);
+        return userMapper.toDTO(userService.registerUser(user));
     }
 
     @DeleteMapping("/{id}")
