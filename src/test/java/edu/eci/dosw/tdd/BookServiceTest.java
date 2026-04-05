@@ -3,82 +3,123 @@ package edu.eci.dosw.tdd;
 import edu.eci.dosw.tdd.core.exception.BookNotAvailableException;
 import edu.eci.dosw.tdd.core.model.Book;
 import edu.eci.dosw.tdd.core.service.BookService;
+import edu.eci.dosw.tdd.persistence.dao.BookEntity;
+import edu.eci.dosw.tdd.persistence.mapper.BookPersistenceMapper;
+import edu.eci.dosw.tdd.persistence.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class BookServiceTest {
 
+    @Mock
+    private BookRepository bookRepository;
+
+    @Mock
+    private BookPersistenceMapper bookMapper;
+
+    @InjectMocks
     private BookService bookService;
+
+    private BookEntity bookEntity;
+    private Book book;
 
     @BeforeEach
     void setUp() {
-        bookService = new BookService();
+        bookEntity = new BookEntity("b1", "Clean Code", "Robert Martin", 5, 5);
+        book = new Book("b1", "Clean Code", "Robert Martin", 5, 5);
     }
 
     @Test
-    void addBook_shouldAddBookSuccessfully() {
-        Book book = new Book("1", "Clean Code", "Robert Martin", 0);
+    void addBook_shouldSaveAndReturnBook() {
+        when(bookMapper.toEntity(any())).thenReturn(bookEntity);
+        when(bookRepository.save(any())).thenReturn(bookEntity);
+        when(bookMapper.toModel(bookEntity)).thenReturn(book);
 
-        bookService.addBook(book, 3);
+        Book result = bookService.addBook(book);
 
-        Book result = bookService.getBookById("1");
-        assertEquals("Clean Code", result.getTitle());
-        assertEquals(3, result.getCopies());
-        assertTrue(result.isAvailable());
-    }
-
-    @Test
-    void getAllBooks_shouldReturnAllBooks() {
-        bookService.addBook(new Book("1", "Clean Code", "Robert Martin", 0), 2);
-        bookService.addBook(new Book("2", "Clean Architecture", "Robert Martin", 0), 1);
-
-        List<Book> books = bookService.getAllBooks();
-        assertEquals(2, books.size());
-    }
-
-    @Test
-    void getBookById_shouldReturnBook_whenExists() {
-        bookService.addBook(new Book("1", "Clean Code", "Robert Martin", 0), 2);
-
-        Book result = bookService.getBookById("1");
         assertNotNull(result);
-        assertEquals("1", result.getId());
+        assertEquals("b1", result.getId());
+        verify(bookRepository).save(any());
     }
 
     @Test
-    void getBookById_shouldThrowException_whenNotExists() {
-        assertThrows(BookNotAvailableException.class,
-                () -> bookService.getBookById("999"));
+    void addBook_shouldThrowWhenCopiesIsZero() {
+        book.setTotalCopies(0);
+        assertThrows(IllegalArgumentException.class, () -> bookService.addBook(book));
     }
 
     @Test
-    void updateAvailability_shouldUpdateSuccessfully() {
-        bookService.addBook(new Book("1", "Clean Code", "Robert Martin", 0), 2);
+    void getBookById_shouldReturnBook() {
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
+        when(bookMapper.toModel(bookEntity)).thenReturn(book);
 
-        Book result = bookService.updateAvailability("1", false);
-
-        assertFalse(result.isAvailable());
+        Book result = bookService.getBookById("b1");
+        assertEquals("b1", result.getId());
     }
 
     @Test
-    void decrementCopies_shouldMakeBookUnavailable_whenLastCopy() {
-        bookService.addBook(new Book("1", "Clean Code", "Robert Martin", 0), 1);
-
-        bookService.decrementCopies("1");
-
-        assertFalse(bookService.getBookById("1").isAvailable());
-        assertEquals(0, bookService.getBookById("1").getCopies());
+    void getBookById_shouldThrowWhenNotFound() {
+        when(bookRepository.findById("x")).thenReturn(Optional.empty());
+        assertThrows(BookNotAvailableException.class, () -> bookService.getBookById("x"));
     }
 
     @Test
-    void decrementCopies_shouldThrowException_whenNoCopies() {
-        bookService.addBook(new Book("1", "Clean Code", "Robert Martin", 0), 0);
+    void getAllBooks_shouldReturnList() {
+        when(bookRepository.findAll()).thenReturn(List.of(bookEntity));
+        when(bookMapper.toModel(bookEntity)).thenReturn(book);
 
-        assertThrows(BookNotAvailableException.class,
-                () -> bookService.decrementCopies("1"));
+        List<Book> result = bookService.getAllBooks();
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void decrementCopies_shouldReduceAvailableCopies() {
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
+        when(bookRepository.save(any())).thenReturn(bookEntity);
+
+        bookService.decrementCopies("b1");
+
+        assertEquals(4, bookEntity.getAvailableCopies());
+        verify(bookRepository).save(bookEntity);
+    }
+
+    @Test
+    void decrementCopies_shouldThrowWhenNoCopiesAvailable() {
+        bookEntity.setAvailableCopies(0);
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
+
+        assertThrows(BookNotAvailableException.class, () -> bookService.decrementCopies("b1"));
+    }
+
+    @Test
+    void incrementCopies_shouldIncreaseAvailableCopies() {
+        bookEntity.setAvailableCopies(3);
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
+        when(bookRepository.save(any())).thenReturn(bookEntity);
+
+        bookService.incrementCopies("b1");
+
+        assertEquals(4, bookEntity.getAvailableCopies());
+        verify(bookRepository).save(bookEntity);
+    }
+
+    @Test
+    void incrementCopies_shouldThrowWhenAlreadyAtMax() {
+        bookEntity.setAvailableCopies(5);
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
+
+        assertThrows(IllegalStateException.class, () -> bookService.incrementCopies("b1"));
     }
 }

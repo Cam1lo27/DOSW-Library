@@ -13,7 +13,9 @@ public class BookValidator {
             throw new IllegalArgumentException("El título del libro no puede estar vacío.");
         if (book.getAuthor() == null || book.getAuthor().isBlank())
             throw new IllegalArgumentException("El autor del libro no puede estar vacío.");
-        if (book.getCopies() < 0)
-            throw new IllegalArgumentException("El número de copias no puede ser negativo.");
+        if (book.getTotalCopies() <= 0)
+            throw new IllegalArgumentException("El número de copias totales debe ser mayor a 0.");
+        if (book.getAvailableCopies() < 0)
+            throw new IllegalArgumentException("El número de copias disponibles no puede ser negativo.");
     }
 }

@@ -2,33 +2,53 @@ package edu.eci.dosw.tdd.core.service;
 
 import edu.eci.dosw.tdd.core.exception.UserNotFoundException;
 import edu.eci.dosw.tdd.core.model.User;
+import edu.eci.dosw.tdd.persistence.dao.UserEntity;
+import edu.eci.dosw.tdd.persistence.mapper.UserPersistenceMapper;
+import edu.eci.dosw.tdd.persistence.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
-    private final List<User> users = new ArrayList<>();
+    private final UserRepository userRepository;
+    private final UserPersistenceMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository,
+                       UserPersistenceMapper userMapper,
+                       PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public User registerUser(User user) {
-        users.add(user);
-        return user;
+        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        return userMapper.toModel(userRepository.save(userMapper.toEntity(user)));
     }
 
     public List<User> getAllUsers() {
-        return users;
+        return userRepository.findAll().stream()
+                .map(userMapper::toModel)
+                .collect(Collectors.toList());
     }
 
     public User getUserById(String id) {
-        return users.stream()
-                .filter(u -> u.getId().equals(id))
-                .findFirst()
+        return userRepository.findById(id)
+                .map(userMapper::toModel)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    public UserEntity getEntityById(String id) {
+        return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     public void deleteUser(String id) {
-        users.removeIf(u -> u.getId().equals(id));
+        userRepository.deleteById(id);
     }
 }
