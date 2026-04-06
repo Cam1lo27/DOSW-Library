@@ -1,15 +1,20 @@
-package edu.eci.dosw.tdd.core.model;
+package edu.eci.dosw.tdd.persistence.nonrelational.document;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Book {
+@Document(collection = "books")
+public class BookDocument {
+
+    @Id
     private String id;
     private String title;
     private String author;
@@ -18,17 +23,11 @@ public class Book {
     private LocalDate publishDate;
     private LocalDate addedAt;
     private List<String> categories;
-
     private BookMetadata metadata;
-
     private int totalCopies;
     private int availableCopies;
     private int loanedCopies;
     private String status;
-
-    public boolean isAvailable() {
-        return availableCopies > 0;
-    }
 
     @Data
     @NoArgsConstructor

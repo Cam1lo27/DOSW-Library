@@ -1,19 +1,19 @@
 package edu.eci.dosw.tdd.core.service;
 
+import edu.eci.dosw.tdd.core.model.User;
 import edu.eci.dosw.tdd.core.security.JwtTokenProvider;
-import edu.eci.dosw.tdd.persistence.dao.UserEntity;
-import edu.eci.dosw.tdd.persistence.repository.UserRepository;
+import edu.eci.dosw.tdd.persistence.repository.UserRepositoryPort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final UserRepositoryPort userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository,
+    public AuthService(UserRepositoryPort userRepository,
                        JwtTokenProvider jwtTokenProvider,
                        PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -22,7 +22,7 @@ public class AuthService {
     }
 
     public String login(String username, String password) {
-        UserEntity user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Credenciales inválidas."));
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {

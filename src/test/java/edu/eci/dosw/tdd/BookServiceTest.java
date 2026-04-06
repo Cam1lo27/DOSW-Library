@@ -3,9 +3,7 @@ package edu.eci.dosw.tdd;
 import edu.eci.dosw.tdd.core.exception.BookNotAvailableException;
 import edu.eci.dosw.tdd.core.model.Book;
 import edu.eci.dosw.tdd.core.service.BookService;
-import edu.eci.dosw.tdd.persistence.dao.BookEntity;
-import edu.eci.dosw.tdd.persistence.mapper.BookPersistenceMapper;
-import edu.eci.dosw.tdd.persistence.repository.BookRepository;
+import edu.eci.dosw.tdd.persistence.repository.BookRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,28 +22,26 @@ import static org.mockito.Mockito.*;
 class BookServiceTest {
 
     @Mock
-    private BookRepository bookRepository;
-
-    @Mock
-    private BookPersistenceMapper bookMapper;
+    private BookRepositoryPort bookRepository;
 
     @InjectMocks
     private BookService bookService;
 
-    private BookEntity bookEntity;
     private Book book;
 
     @BeforeEach
     void setUp() {
-        bookEntity = new BookEntity("b1", "Clean Code", "Robert Martin", 5, 5);
-        book = new Book("b1", "Clean Code", "Robert Martin", 5, 5);
+        book = new Book();
+        book.setId("b1");
+        book.setTitle("Clean Code");
+        book.setAuthor("Robert Martin");
+        book.setTotalCopies(5);
+        book.setAvailableCopies(5);
     }
 
     @Test
     void addBook_shouldSaveAndReturnBook() {
-        when(bookMapper.toEntity(any())).thenReturn(bookEntity);
-        when(bookRepository.save(any())).thenReturn(bookEntity);
-        when(bookMapper.toModel(bookEntity)).thenReturn(book);
+        when(bookRepository.save(any())).thenReturn(book);
 
         Book result = bookService.addBook(book);
 
@@ -62,8 +58,7 @@ class BookServiceTest {
 
     @Test
     void getBookById_shouldReturnBook() {
-        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
-        when(bookMapper.toModel(bookEntity)).thenReturn(book);
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(book));
 
         Book result = bookService.getBookById("b1");
         assertEquals("b1", result.getId());
@@ -77,8 +72,7 @@ class BookServiceTest {
 
     @Test
     void getAllBooks_shouldReturnList() {
-        when(bookRepository.findAll()).thenReturn(List.of(bookEntity));
-        when(bookMapper.toModel(bookEntity)).thenReturn(book);
+        when(bookRepository.findAll()).thenReturn(List.of(book));
 
         List<Book> result = bookService.getAllBooks();
         assertEquals(1, result.size());
@@ -86,39 +80,50 @@ class BookServiceTest {
 
     @Test
     void decrementCopies_shouldReduceAvailableCopies() {
-        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
-        when(bookRepository.save(any())).thenReturn(bookEntity);
+        Book updated = new Book();
+        updated.setId("b1");
+        updated.setTotalCopies(5);
+        updated.setAvailableCopies(4);
 
-        bookService.decrementCopies("b1");
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(book));
+        when(bookRepository.save(any())).thenReturn(updated);
 
-        assertEquals(4, bookEntity.getAvailableCopies());
-        verify(bookRepository).save(bookEntity);
+        Book result = bookService.decrementCopies("b1");
+
+        assertEquals(4, result.getAvailableCopies());
+        verify(bookRepository).save(any());
     }
 
     @Test
     void decrementCopies_shouldThrowWhenNoCopiesAvailable() {
-        bookEntity.setAvailableCopies(0);
-        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
+        book.setAvailableCopies(0);
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(book));
 
         assertThrows(BookNotAvailableException.class, () -> bookService.decrementCopies("b1"));
     }
 
     @Test
     void incrementCopies_shouldIncreaseAvailableCopies() {
-        bookEntity.setAvailableCopies(3);
-        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
-        when(bookRepository.save(any())).thenReturn(bookEntity);
+        book.setAvailableCopies(3);
 
-        bookService.incrementCopies("b1");
+        Book updated = new Book();
+        updated.setId("b1");
+        updated.setTotalCopies(5);
+        updated.setAvailableCopies(4);
 
-        assertEquals(4, bookEntity.getAvailableCopies());
-        verify(bookRepository).save(bookEntity);
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(book));
+        when(bookRepository.save(any())).thenReturn(updated);
+
+        Book result = bookService.incrementCopies("b1");
+
+        assertEquals(4, result.getAvailableCopies());
+        verify(bookRepository).save(any());
     }
 
     @Test
     void incrementCopies_shouldThrowWhenAlreadyAtMax() {
-        bookEntity.setAvailableCopies(5);
-        when(bookRepository.findById("b1")).thenReturn(Optional.of(bookEntity));
+        book.setAvailableCopies(5);
+        when(bookRepository.findById("b1")).thenReturn(Optional.of(book));
 
         assertThrows(IllegalStateException.class, () -> bookService.incrementCopies("b1"));
     }

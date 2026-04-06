@@ -27,7 +27,7 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('LIBRARIAN')")
-    public UserDTO registerUser( @Valid @RequestBody UserDTO dto) {
+    public UserDTO registerUser(@Valid @RequestBody UserDTO dto) {
         return userMapper.toDTO(userService.registerUser(userMapper.toModel(dto)));
     }
 
@@ -47,10 +47,9 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('LIBRARIAN')")
-    public UserDTO updateUser(@PathVariable String id, @RequestBody UserDTO dto) {
-        return userMapper.toDTO(
-                userService.registerUser(userMapper.toModel(dto))
-        );
+    public UserDTO updateUser(@PathVariable String id, @Valid @RequestBody UserDTO dto) {
+        dto.setId(id);
+        return userMapper.toDTO(userService.registerUser(userMapper.toModel(dto)));
     }
 
     @PatchMapping("/{id}")
@@ -62,7 +61,12 @@ public class UserController {
         if (dto.getUsername() != null) user.setUsername(dto.getUsername());
         if (dto.getRole() != null) user.setRole(dto.getRole());
 
-        return userMapper.toDTO(userService.registerUser(user));
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            user.setPasswordHash(dto.getPassword());
+            return userMapper.toDTO(userService.registerUser(user));
+        }
+
+        return userMapper.toDTO(userService.updateUser(user));
     }
 
     @DeleteMapping("/{id}")

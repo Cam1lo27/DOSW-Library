@@ -3,61 +3,63 @@ package edu.eci.dosw.tdd;
 import edu.eci.dosw.tdd.core.exception.UserNotFoundException;
 import edu.eci.dosw.tdd.core.model.User;
 import edu.eci.dosw.tdd.core.service.UserService;
-import edu.eci.dosw.tdd.persistence.dao.UserEntity;
-import edu.eci.dosw.tdd.persistence.mapper.UserPersistenceMapper;
-import edu.eci.dosw.tdd.persistence.repository.UserRepository;
+import edu.eci.dosw.tdd.persistence.repository.UserRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserRepositoryPort userRepository;
 
     @Mock
-    private UserPersistenceMapper userMapper;
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
 
-    private UserEntity userEntity;
     private User user;
 
     @BeforeEach
     void setUp() {
-        userEntity = new UserEntity("u1", "jdoe", "hashed123", "John Doe", "USER");
-        user = new User("u1", "jdoe", "hashed123", "John Doe", "USER");
+        user = new User();
+        user.setId("u1");
+        user.setUsername("jdoe");
+        user.setPasswordHash("hashed123");
+        user.setName("John Doe");
+        user.setRole("USER");
     }
 
     @Test
-    void registerUser_shouldSaveAndReturnUser() {
-        when(userMapper.toEntity(any())).thenReturn(userEntity);
-        when(userRepository.save(any())).thenReturn(userEntity);
-        when(userMapper.toModel(userEntity)).thenReturn(user);
+    void registerUser_shouldEncodePasswordAndSave() {
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(userRepository.save(any())).thenReturn(user);
 
         User result = userService.registerUser(user);
 
         assertNotNull(result);
         assertEquals("u1", result.getId());
+        verify(passwordEncoder).encode(anyString());
         verify(userRepository).save(any());
     }
 
     @Test
     void getUserById_shouldReturnUser() {
-        when(userRepository.findById("u1")).thenReturn(Optional.of(userEntity));
-        when(userMapper.toModel(userEntity)).thenReturn(user);
+        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
 
         User result = userService.getUserById("u1");
         assertEquals("u1", result.getId());
@@ -71,8 +73,7 @@ class UserServiceTest {
 
     @Test
     void getAllUsers_shouldReturnList() {
-        when(userRepository.findAll()).thenReturn(List.of(userEntity));
-        when(userMapper.toModel(userEntity)).thenReturn(user);
+        when(userRepository.findAll()).thenReturn(List.of(user));
 
         List<User> result = userService.getAllUsers();
         assertEquals(1, result.size());

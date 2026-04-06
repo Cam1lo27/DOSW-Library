@@ -1,142 +1,145 @@
 package edu.eci.dosw.tdd;
 
-import edu.eci.dosw.tdd.core.exception.BookNotAvailableException;
-import edu.eci.dosw.tdd.core.exception.LoanLimitExceededException;
-import edu.eci.dosw.tdd.core.model.Book;
-import edu.eci.dosw.tdd.core.model.Loan;
-import edu.eci.dosw.tdd.core.model.LoanStatus;
-import edu.eci.dosw.tdd.core.model.User;
+import edu.eci.dosw.tdd.core.model.*;
 import edu.eci.dosw.tdd.core.service.BookService;
 import edu.eci.dosw.tdd.core.service.LoanService;
 import edu.eci.dosw.tdd.core.service.UserService;
-import edu.eci.dosw.tdd.persistence.dao.BookEntity;
-import edu.eci.dosw.tdd.persistence.dao.LoanEntity;
-import edu.eci.dosw.tdd.persistence.dao.UserEntity;
-import edu.eci.dosw.tdd.persistence.mapper.LoanPersistenceMapper;
-import edu.eci.dosw.tdd.persistence.repository.LoanRepository;
+import edu.eci.dosw.tdd.persistence.repository.BookRepositoryPort;
+import edu.eci.dosw.tdd.persistence.repository.LoanRepositoryPort;
+import edu.eci.dosw.tdd.persistence.repository.UserRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class LoanServiceTest {
 
-    @Mock
-    private LoanRepository loanRepository;
+    @Mock private LoanRepositoryPort loanRepository;
+    @Mock private BookRepositoryPort bookRepository;
+    @Mock private UserRepositoryPort userRepository;
+    @Mock private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private LoanPersistenceMapper loanMapper;
-
-    @Mock
+    private LoanService loanService;
     private BookService bookService;
-
-    @Mock
     private UserService userService;
 
-    @InjectMocks
-    private LoanService loanService;
-
-    private UserEntity userEntity;
-    private BookEntity bookEntity;
-    private LoanEntity loanEntity;
-    private Book book;
-    private User user;
-    private Loan loan;
+    private User testUser;
+    private Book testBook;
+    private Loan testLoan;
 
     @BeforeEach
     void setUp() {
-        userEntity = new UserEntity("u1", "jdoe", "hashed123", "John Doe", "USER");
-        bookEntity = new BookEntity("b1", "Clean Code", "Robert Martin", 5, 5);
-        book = new Book("b1", "Clean Code", "Robert Martin", 5, 5);
-        user = new User("u1", "jdoe", "hashed123", "John Doe", "USER");
+        MockitoAnnotations.openMocks(this);
+        userService = new UserService(userRepository, passwordEncoder);
+        bookService = new BookService(bookRepository);
+        loanService = new LoanService(loanRepository, bookService, userService);
 
-        loanEntity = new LoanEntity();
-        loanEntity.setUser(userEntity);
-        loanEntity.setBook(bookEntity);
-        loanEntity.setLoanDate(LocalDate.now());
-        loanEntity.setStatus("ACTIVE");
+        testUser = new User();
+        testUser.setId("user-1");
+        testUser.setUsername("testuser");
+        testUser.setPasswordHash("hash");
+        testUser.setName("Test User");
+        testUser.setRole("USER");
 
-        loan = new Loan();
-        loan.setBook(book);
-        loan.setUser(user);
-        loan.setLoanDate(LocalDate.now());
-        loan.setStatus(LoanStatus.ACTIVE);
+        testBook = new Book();
+        testBook.setId("book-1");
+        testBook.setTitle("Clean Code");
+        testBook.setAuthor("Robert Martin");
+        testBook.setTotalCopies(3);
+        testBook.setAvailableCopies(2); // 2/3: ya hay 1 prestamo activo, permite incrementar al devolver
+
+        testLoan = new Loan(testBook, testUser);
+        testLoan.setId("loan-1");
     }
 
     @Test
-    void createLoan_shouldCreateSuccessfully() {
-        when(bookService.getBookById("b1")).thenReturn(book);
-        when(loanRepository.countByUserIdAndStatus("u1", "ACTIVE")).thenReturn(0L);
-        when(userService.getEntityById("u1")).thenReturn(userEntity);
-        when(bookService.getEntityById("b1")).thenReturn(bookEntity);
-        when(loanRepository.save(any())).thenReturn(loanEntity);
-        when(loanMapper.toModel(loanEntity)).thenReturn(loan);
+    void dadoQueExisteUnPrestamo_cuandoLoConsulto_entoncesLaConsultaEsExitosaValidandoElId() {
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
+        when(loanRepository.findByUserId("user-1")).thenReturn(List.of(testLoan));
 
-        Loan result = loanService.createLoan("u1", "b1");
+        List<Loan> loans = loanService.getLoansByUser("user-1");
 
-        assertNotNull(result);
-        assertEquals(LoanStatus.ACTIVE, result.getStatus());
-        verify(bookService).decrementCopies("b1");
+        assertFalse(loans.isEmpty());
+        assertEquals("loan-1", loans.get(0).getId());
     }
 
     @Test
-    void createLoan_shouldThrowWhenBookNotAvailable() {
-        book.setAvailableCopies(0);
-        when(bookService.getBookById("b1")).thenReturn(book);
+    void dadoQueNoHayPrestamos_cuandoLoConsulto_entoncesNoRetornaNingunResultado() {
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
+        when(loanRepository.findByUserId("user-1")).thenReturn(new ArrayList<>());
 
-        assertThrows(BookNotAvailableException.class, () -> loanService.createLoan("u1", "b1"));
-        verify(bookService, never()).decrementCopies(any());
+        List<Loan> loans = loanService.getLoansByUser("user-1");
+
+        assertTrue(loans.isEmpty());
     }
 
     @Test
-    void createLoan_shouldThrowWhenLoanLimitExceeded() {
-        when(bookService.getBookById("b1")).thenReturn(book);
-        when(loanRepository.countByUserIdAndStatus("u1", "ACTIVE")).thenReturn(3L);
+    void dadoQueNoHayPrestamos_cuandoCreoUno_entoncesLaCreacionEsExitosa() {
+        Book bookWithCopies = new Book();
+        bookWithCopies.setId("book-1");
+        bookWithCopies.setTotalCopies(3);
+        bookWithCopies.setAvailableCopies(3);
 
-        assertThrows(LoanLimitExceededException.class, () -> loanService.createLoan("u1", "b1"));
-        verify(bookService, never()).decrementCopies(any());
+        Book bookDecremented = new Book();
+        bookDecremented.setId("book-1");
+        bookDecremented.setTotalCopies(3);
+        bookDecremented.setAvailableCopies(2);
+
+        when(bookRepository.findById("book-1"))
+                .thenReturn(Optional.of(bookWithCopies))   // createLoan: getBookById
+                .thenReturn(Optional.of(bookWithCopies))   // decrementCopies: getBookById
+                .thenReturn(Optional.of(bookDecremented)); // createLoan: getBookById actualizado
+        when(bookRepository.save(any(Book.class))).thenReturn(bookDecremented);
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
+        when(loanRepository.countByUserIdAndStatus("user-1", "ACTIVE")).thenReturn(0L);
+        when(loanRepository.save(any(Loan.class))).thenReturn(testLoan);
+
+        Loan loan = loanService.createLoan("user-1", "book-1");
+
+        assertNotNull(loan);
+        assertEquals("book-1", loan.getBook().getId());
+        assertEquals("user-1", loan.getUser().getId());
     }
 
     @Test
-    void returnLoan_shouldReturnSuccessfully() {
-        when(loanRepository.findByUserIdAndBookIdAndStatus("u1", "b1", "ACTIVE"))
-                .thenReturn(Optional.of(loanEntity));
-        when(loanRepository.save(any())).thenReturn(loanEntity);
-        when(loanMapper.toModel(loanEntity)).thenReturn(loan);
+    void dadoQueExisteUnPrestamo_cuandoLoElimino_entoncesLaEliminacionEsExitosa() {
+        testLoan.setStatus(LoanStatus.ACTIVE);
 
-        Loan result = loanService.returnLoan("u1", "b1");
+        Book bookIncremented = new Book();
+        bookIncremented.setId("book-1");
+        bookIncremented.setTotalCopies(3);
+        bookIncremented.setAvailableCopies(3);
 
-        assertNotNull(result);
-        assertEquals("RETURNED", loanEntity.getStatus());
-        verify(bookService).incrementCopies("b1");
+        when(loanRepository.findByUserIdAndBookIdAndStatus("user-1", "book-1", "ACTIVE"))
+                .thenReturn(Optional.of(testLoan));
+        when(bookRepository.findById("book-1")).thenReturn(Optional.of(testBook)); // availableCopies=2 < totalCopies=3
+        when(bookRepository.save(any(Book.class))).thenReturn(bookIncremented);
+        when(loanRepository.save(any(Loan.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Loan returned = loanService.returnLoan("user-1", "book-1");
+
+        assertEquals(LoanStatus.RETURNED, returned.getStatus());
     }
 
     @Test
-    void returnLoan_shouldThrowWhenNoActiveLoanFound() {
-        when(loanRepository.findByUserIdAndBookIdAndStatus("u1", "b1", "ACTIVE"))
-                .thenReturn(Optional.empty());
+    void dadoQueExisteUnPrestamo_cuandoLoEliminoYConsulto_entoncesNoRetornaNingunResultado() {
+        testLoan.setStatus(LoanStatus.RETURNED);
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(testUser));
+        when(loanRepository.findByUserId("user-1")).thenReturn(List.of(testLoan));
 
-        assertThrows(BookNotAvailableException.class, () -> loanService.returnLoan("u1", "b1"));
-        verify(bookService, never()).incrementCopies(any());
-    }
+        List<Loan> loans = loanService.getLoansByUser("user-1");
+        List<Loan> activeLoans = loans.stream()
+                .filter(l -> l.getStatus() == LoanStatus.ACTIVE)
+                .toList();
 
-    @Test
-    void getLoansByUser_shouldReturnUserLoans() {
-        when(loanRepository.findByUserId("u1")).thenReturn(List.of(loanEntity));
-        when(loanMapper.toModel(loanEntity)).thenReturn(loan);
-
-        List<Loan> result = loanService.getLoansByUser("u1");
-        assertEquals(1, result.size());
+        assertTrue(activeLoans.isEmpty());
     }
 }

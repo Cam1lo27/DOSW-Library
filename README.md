@@ -109,6 +109,11 @@ pruebas automatizadas, documentación de API y control de calidad, aplicadas en 
 
 ![DiagramaER.png](Images/DiagramaER.png)
 
+
+### Diagrama ER MongoDB
+
+![ER-Mongo.png](Images/ER-Mongo.png)
+
 ## Cobertura de pruebas (JaCoCo)
 
 ![cobertura.png](Images/cobertura.png)

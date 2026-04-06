@@ -1,4 +1,4 @@
-package edu.eci.dosw.tdd.persistence.repository;
+package edu.eci.dosw.tdd.persistence.repository.jpa;
 
 import edu.eci.dosw.tdd.persistence.dao.LoanEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface LoanRepository extends JpaRepository<LoanEntity, String> {
+public interface LoanJpaRepository extends JpaRepository<LoanEntity, String> {
 
     List<LoanEntity> findByUserId(String userId);
 

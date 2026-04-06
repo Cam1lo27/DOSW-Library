@@ -8,22 +8,22 @@ import org.springframework.stereotype.Component;
 public class BookPersistenceMapper {
 
     public BookEntity toEntity(Book book) {
-        return new BookEntity(
-                book.getId(),
-                book.getTitle(),
-                book.getAuthor(),
-                book.getTotalCopies(),
-                book.getAvailableCopies()
-        );
+        BookEntity entity = new BookEntity();
+        entity.setId(book.getId());
+        entity.setTitle(book.getTitle());
+        entity.setAuthor(book.getAuthor());
+        entity.setTotalCopies(book.getTotalCopies());
+        entity.setAvailableCopies(book.getAvailableCopies());
+        return entity;
     }
 
     public Book toModel(BookEntity entity) {
-        return new Book(
-                entity.getId(),
-                entity.getTitle(),
-                entity.getAuthor(),
-                entity.getTotalCopies(),
-                entity.getAvailableCopies()
-        );
+        Book book = new Book();
+        book.setId(entity.getId());
+        book.setTitle(entity.getTitle());
+        book.setAuthor(entity.getAuthor());
+        book.setTotalCopies(entity.getTotalCopies());
+        book.setAvailableCopies(entity.getAvailableCopies());
+        return book;
     }
 }

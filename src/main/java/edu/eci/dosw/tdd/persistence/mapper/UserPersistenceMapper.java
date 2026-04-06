@@ -8,22 +8,22 @@ import org.springframework.stereotype.Component;
 public class UserPersistenceMapper {
 
     public UserEntity toEntity(User user) {
-        return new UserEntity(
-                user.getId(),
-                user.getUsername(),
-                user.getPasswordHash(),
-                user.getName(),
-                user.getRole()
-        );
+        UserEntity entity = new UserEntity();
+        entity.setId(user.getId());
+        entity.setUsername(user.getUsername());
+        entity.setPasswordHash(user.getPasswordHash());
+        entity.setName(user.getName());
+        entity.setRole(user.getRole());
+        return entity;
     }
 
     public User toModel(UserEntity entity) {
-        return new User(
-                entity.getId(),
-                entity.getUsername(),
-                entity.getPasswordHash(),
-                entity.getName(),
-                entity.getRole()
-        );
+        User user = new User();
+        user.setId(entity.getId());
+        user.setUsername(entity.getUsername());
+        user.setPasswordHash(entity.getPasswordHash());
+        user.setName(entity.getName());
+        user.setRole(entity.getRole());
+        return user;
     }
 }
