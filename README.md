@@ -171,3 +171,5 @@ pruebas automatizadas, documentación de API y control de calidad, aplicadas en 
 ### Video de pruebas funcionales con cada enpoint simulando los flujos de usuarios, libros y prestamos
 
 https://drive.google.com/file/d/1YUX3c6SwBLBU-1-J2SRzSawBQtEuO3I4/view?usp=sharing
+
+### Video 
