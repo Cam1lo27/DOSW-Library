@@ -99,6 +99,10 @@ pruebas automatizadas, documentación de API y control de calidad, aplicadas en 
 
 ## Diagramas
 
+### Diagrama de Contexto
+
+![DiagramaContexto.png](Images/DiagramaContexto.png)
+
 ### Diagrama de Clases
 ![diagrama-de-clases.png](Images/diagrama-de-clases.png)
 
@@ -168,13 +172,23 @@ pruebas automatizadas, documentación de API y control de calidad, aplicadas en 
 ### Schemas
 ![swagger5.png](Images/swagger5.png)
 
+
+## Videos de pruebas de la aplicación
+
 ### Video de pruebas funcionales con cada enpoint simulando los flujos de usuarios, libros y prestamos
 
 https://drive.google.com/file/d/1YUX3c6SwBLBU-1-J2SRzSawBQtEuO3I4/view?usp=sharing
 
 
+### Video de prueba DB Relacional (PostgreSQL)
 
+https://drive.google.com/file/d/1tbnFs90CTjZ_9JAYIbBzeOuOgqvOUPGr/view?usp=sharing
 
+### Video de prueba DB No Relacional (MongoDB) ejecucion local
 
+https://drive.google.com/file/d/160Dx6lO14dFeIu76kwUOWJl3tAMfgIwH/view?usp=sharing
 
-video
+### Video de prueba DB No Relacional (MongoDB) con despliegue de Azure
+
+https://drive.google.com/file/d/19SsA6ncovnui7Lw-BXV6Iyg1wt1fO2Ac/view?usp=sharing
+
