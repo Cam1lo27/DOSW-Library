@@ -41,9 +41,7 @@ public class LoanService {
 
         User user = userService.getUserById(userId);
 
-        // Decrementar copias disponibles
         bookService.decrementCopies(bookId);
-        // Recargar el book actualizado
         Book updatedBook = bookService.getBookById(bookId);
 
         Loan loan = new Loan(updatedBook, user);
