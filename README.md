@@ -104,10 +104,15 @@ pruebas automatizadas, documentación de API y control de calidad, aplicadas en 
 ![DiagramaContexto.png](Images/DiagramaContexto.png)
 
 ### Diagrama de Clases
-![diagrama-de-clases.png](Images/diagrama-de-clases.png)
 
-### Diagrama de Componentes
+![Diagrama de clases.png](Images/Diagrama%20de%20clases.png)
+
+### Diagrama de Componentes General
 ![diagrama-de-componentes-general.png](Images/diagrama-de-componentes-general.png)
+
+### Diagrama de Componentes General
+
+![DiagramaComponentesEspecifico.png](Images/DiagramaComponentesEspecifico.png)
 
 ### Diagrama ER PostgreSQL
 
